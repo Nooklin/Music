@@ -38,6 +38,14 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { preferences.setColorful(value) }
     }
 
+    // null until the setting is read, so the tour does not flash on the screen
+    val tourDone: StateFlow<Boolean?> = preferences.tourDone
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    fun setTourDone(value: Boolean) {
+        viewModelScope.launch { preferences.setTourDone(value) }
+    }
+
     val librarySections: StateFlow<List<LibrarySectionSetting>?> = preferences.librarySections
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 

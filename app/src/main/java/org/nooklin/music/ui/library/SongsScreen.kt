@@ -44,6 +44,7 @@ private enum class SongSort(val label: String) {
 /** All songs on the server, loaded page by page, with a search field and a way to pick several for a playlist. */
 @Composable
 fun SongsScreen(vm: LibraryViewModel, onBack: () -> Unit, onPlay: (List<Song>, Int, Boolean) -> Unit) {
+    val songTap = rememberSongTap(onPlay)
     val state by vm.songs.collectAsStateWithLifecycle()
     val notice by vm.notice.collectAsStateWithLifecycle()
     val gathering by vm.gathering.collectAsStateWithLifecycle()
@@ -158,7 +159,7 @@ fun SongsScreen(vm: LibraryViewModel, onBack: () -> Unit, onPlay: (List<Song>, I
                                     if (selecting) {
                                         selected = if (song.id in selected) selected - song.id else selected + song.id
                                     } else {
-                                        onPlay(shown, index, false)
+                                        songTap(shown, index)
                                     }
                                 }
                             )

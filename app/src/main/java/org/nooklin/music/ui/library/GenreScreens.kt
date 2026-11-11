@@ -95,7 +95,8 @@ fun GenreAlbumsScreen(
                             coverId = album.coverArt,
                             starred = album.id in starred,
                             onToggleStar = { vm.toggleStar(StarKind.ALBUM, album.id) },
-                            onClick = { onOpenAlbum(album.id) }
+                            onClick = { onOpenAlbum(album.id) },
+                            menu = { AlbumMenu(vm, album) }
                         )
                     }
                 }

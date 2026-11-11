@@ -96,6 +96,7 @@ fun PlaylistScreen(
     onBack: () -> Unit,
     onPlay: (List<Song>, Int, Boolean) -> Unit
 ) {
+    val songTap = rememberSongTap(onPlay)
     val state by vm.playlistDetail.collectAsStateWithLifecycle()
     val notice by vm.notice.collectAsStateWithLifecycle()
     var renaming by remember { mutableStateOf(false) }
@@ -199,7 +200,7 @@ fun PlaylistScreen(
                                 Modifier
                                     .fillMaxWidth()
                                     .heightIn(min = 72.dp)
-                                    .clickable { onPlay(rows.map { it.value }, position, false) }
+                                    .clickable { songTap(rows.map { it.value }, position) }
                                     .padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {

@@ -1,7 +1,10 @@
 package org.nooklin.music.ui.settings
 
+import org.nooklin.music.ui.common.NooklinTopBar
 import org.nooklin.music.ui.common.LocalBottomOverlay
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
+import org.nooklin.music.ui.tour.tourTarget
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Home
@@ -53,20 +57,13 @@ import org.nooklin.music.ui.common.GlassPill
 fun SettingsScreen(onBack: () -> Unit, onNavigate: (String) -> Unit) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Settings", fontSize = 34.sp, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
+            NooklinTopBar("Settings", onBack)
         }
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
             SettingsGroup(
                 null,
-                listOf({ SettingsNavRow("Server", Icons.Filled.Dns, Tile.Blue) { onNavigate("server") } })
+                listOf({ Box(Modifier.tourTarget("settings_server")) { SettingsNavRow("Server", Icons.Filled.Dns, Tile.Blue) { onNavigate("server") } } })
             )
             Spacer(Modifier.height(16.dp))
             SettingsGroup(
@@ -90,6 +87,7 @@ fun SettingsScreen(onBack: () -> Unit, onNavigate: (String) -> Unit) {
                 null,
                 listOf(
                     { SettingsNavRow("Backup", Icons.Filled.Lock, Tile.Green) { onNavigate("backup") } },
+                    { SettingsNavRow("Tour", Icons.Filled.Explore, Tile.Orange) { onNavigate("tour") } },
                     { SettingsNavRow("About", Icons.Filled.Info, Tile.Gray) { onNavigate("about") } }
                 )
             )

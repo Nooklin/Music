@@ -59,6 +59,7 @@ import org.nooklin.music.data.local.AppThemeMode
 import kotlinx.coroutines.flow.map
 import org.nooklin.music.data.server.ServerStore
 import org.nooklin.music.ui.common.LocalBottomOverlay
+import org.nooklin.music.ui.common.LocalOpenArtist
 import org.nooklin.music.ui.common.LocalQueueActions
 import org.nooklin.music.ui.common.QueueActions
 import org.nooklin.music.ui.home.HomeScreen
@@ -78,11 +79,16 @@ import org.nooklin.music.ui.library.DownloadsScreen
 import org.nooklin.music.ui.library.PlayedSongsScreen
 import org.nooklin.music.ui.library.PlaylistScreen
 import org.nooklin.music.ui.library.SongsScreen
+import org.nooklin.music.ui.library.PLAY_ALBUM_LIMIT
 import org.nooklin.music.ui.library.PlaylistsScreen
 import org.nooklin.music.ui.playback.MiniPlayer
 import org.nooklin.music.ui.playback.NowPlayingScreen
 import org.nooklin.music.ui.playback.PlaybackViewModel
 import org.nooklin.music.ui.settings.LocalColorful
+import org.nooklin.music.ui.tour.TourActions
+import org.nooklin.music.ui.tour.TourContext
+import org.nooklin.music.ui.tour.TourOverlay
+import org.nooklin.music.ui.tour.tourTarget
 import org.nooklin.music.ui.settings.SettingsAboutScreen
 import org.nooklin.music.ui.settings.SettingsAppearanceScreen
 import org.nooklin.music.ui.settings.ServerViewModel
@@ -133,6 +139,7 @@ fun NooklinMusicApp() {
     val themeMode by settingsViewModel.themeMode.collectAsStateWithLifecycle()
     val contrastColor by settingsViewModel.contrastColor.collectAsStateWithLifecycle()
     val colorful by settingsViewModel.colorful.collectAsStateWithLifecycle()
+    val tourDone by settingsViewModel.tourDone.collectAsStateWithLifecycle()
     val appFont by settingsViewModel.appFont.collectAsStateWithLifecycle()
     val homeSections by settingsViewModel.homeSections.collectAsStateWithLifecycle()
     val librarySections by settingsViewModel.librarySections.collectAsStateWithLifecycle()
@@ -223,7 +230,8 @@ fun NooklinMusicApp() {
             addToQueue = { songs ->
                 if (hasMediaNow) playbackViewModel.addToQueue(songs) else startPlayback { playbackViewModel.addToQueue(songs) }
             },
-            play = { songs -> playSongs(songs, 0, false) }
+            play = { songs -> playSongs(songs, 0, false) },
+            playSong = { songs, index -> startPlayback { playbackViewModel.playSongFrom(songs, index) } }
         )
     }
 
@@ -239,7 +247,7 @@ fun NooklinMusicApp() {
             var overlayHeight by remember { mutableStateOf(0.dp) }
             val density = LocalDensity.current
             Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-                CompositionLocalProvider(LocalBottomOverlay provides overlayHeight, LocalQueueActions provides queueActions, LocalColorful provides colorful) {
+                CompositionLocalProvider(LocalBottomOverlay provides overlayHeight, LocalQueueActions provides queueActions, LocalColorful provides colorful, LocalOpenArtist provides openArtist) {
                 Box(Modifier.fillMaxSize().consumeWindowInsets(WindowInsets.navigationBars)) {
             // Screens opened from Library slide in from the right and out to the right; all other changes are instant
             AnimatedContent(
@@ -288,6 +296,16 @@ fun NooklinMusicApp() {
                     onOpenPlayed = { byCount -> route = if (byCount) Route.TOPPLAYED else Route.HISTORY },
                     onOpenPlaylist = openPlaylist,
                     onPlaySongs = playSongs,
+                    onStartRadio = { artist ->
+                        if (playbackSettings.autoMix && MixMode.of(playbackSettings.autoMixMode) != null) {
+                            startPlayback { playbackViewModel.startArtistMix(artist.id) }
+                        } else {
+                            // AutoMix off: the songs of this artist from the server, shuffled; downloaded is not needed
+                            libraryViewModel.songsOfArtists(listOf(artist), PLAY_ALBUM_LIMIT) { songs ->
+                                startPlayback { playbackViewModel.playSongs(songs, 0, true) }
+                            }
+                        }
+                    },
                     discoveryOn = playbackSettings.discovery,
                     autoMixOn = playbackSettings.autoMix,
                     autoMixMode = playbackSettings.autoMixMode,
@@ -368,6 +386,7 @@ fun NooklinMusicApp() {
                             "playback" -> Route.PLAYBACKSETTINGS
                             "automix" -> Route.AUTOMIXSETTINGS
                             "backup" -> Route.BACKUP
+                            "tour" -> { settingsViewModel.setTourDone(false); Route.HOME }
                             "about" -> Route.ABOUT
                             else -> Route.SETTINGS
                         }
@@ -420,6 +439,7 @@ fun NooklinMusicApp() {
                 ) {
                 if (playerState.hasMedia) {
                     MiniPlayer(
+                        modifier = Modifier.tourTarget("mini_player"),
                         state = playerState,
                         onOpen = { nowPlayingOpen = true },
                         onTogglePlay = { startPlayback { playbackViewModel.togglePlay() } },
@@ -460,6 +480,24 @@ fun NooklinMusicApp() {
                     openArtist(id)
                 }
             )
+            }
+            // The tour of the first start, over everything
+            // Not before the saved server is known: the tour decides from it which steps it needs
+            if (tourDone == false && serverState.loaded) {
+                TourOverlay(
+                    context = TourContext(
+                        settingsOpen = route == Route.SETTINGS,
+                        serverOpen = route == Route.SERVER,
+                        libraryOpen = route == Route.LIBRARY,
+                        playerOpen = nowPlayingOpen,
+                        serverSaved = serverState.hasSavedPassword
+                    ),
+                    playerAvailable = playerState.hasMedia,
+                    actions = TourActions(
+                        showHome = { nowPlayingOpen = false; detailText = ""; route = Route.HOME },
+                        finish = { nowPlayingOpen = false; route = Route.HOME; settingsViewModel.setTourDone(true) }
+                    )
+                )
             }
         }
     }

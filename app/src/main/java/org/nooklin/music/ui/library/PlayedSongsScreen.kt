@@ -20,6 +20,7 @@ fun PlayedSongsScreen(
     onBack: () -> Unit,
     onPlay: (List<Song>, Int, Boolean) -> Unit
 ) {
+    val songTap = rememberSongTap(onPlay)
     val lists by vm.played.collectAsStateWithLifecycle()
     val notice by vm.notice.collectAsStateWithLifecycle()
     LaunchedEffect(byCount) { vm.loadPlayed(byCount) }
@@ -44,7 +45,7 @@ fun PlayedSongsScreen(
                             coverId = song.coverArt,
                             starred = null,
                             onToggleStar = {},
-                            onClick = { onPlay(songs, index, false) }
+                            onClick = { songTap(songs, index) }
                         )
                     }
                 }

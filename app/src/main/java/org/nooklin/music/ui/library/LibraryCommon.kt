@@ -58,7 +58,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.nooklin.music.data.library.CoverCache
+import org.nooklin.music.data.library.Song
 import org.nooklin.music.ui.common.LocalBottomOverlay
+import org.nooklin.music.ui.common.LocalQueueActions
+import org.nooklin.music.ui.common.NooklinTopBar
 import org.nooklin.music.data.server.ServerSession
 
 /** Title bar with back and refresh, and a place for short messages. Used by every library screen. */
@@ -82,20 +85,12 @@ fun LibraryScaffold(
     }
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(title, fontSize = 34.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    actions()
-                    IconButton(onClick = onRefresh) {
-                        Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
-                    }
+            NooklinTopBar(title, onBack) {
+                actions()
+                IconButton(onClick = onRefresh) {
+                    Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
                 }
-            )
+            }
         },
         snackbarHost = { SnackbarHost(snackbarHost, Modifier.padding(bottom = LocalBottomOverlay.current)) }
     ) { padding ->
@@ -309,3 +304,10 @@ const val PLAY_ALBUM_LIMIT = 50
 
 /** The number of random songs that Shuffle asks the server for when it is not limited to a list. */
 const val SHUFFLE_SONG_COUNT = 50
+
+/** The tap on a song row: one function for every list, see [QueueActions.playSong]. */
+@Composable
+fun rememberSongTap(onPlay: (List<Song>, Int, Boolean) -> Unit): (List<Song>, Int) -> Unit {
+    val queue = LocalQueueActions.current
+    return { songs, index -> if (queue != null) queue.playSong(songs, index) else onPlay(songs, index, false) }
+}

@@ -31,6 +31,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.nooklin.music.data.library.Album
 import org.nooklin.music.data.library.AlbumListKind
 import org.nooklin.music.data.library.Song
+import org.nooklin.music.data.library.Artist
 import org.nooklin.music.data.local.HomeSection
 import org.nooklin.music.data.local.HomeSectionSetting
 import org.nooklin.music.ui.library.CoverArt
@@ -77,6 +79,7 @@ fun HomeScreen(
     onOpenPlayed: (Boolean) -> Unit,
     onOpenPlaylist: (String) -> Unit,
     onPlaySongs: (List<Song>, Int, Boolean) -> Unit,
+    onStartRadio: (Artist) -> Unit,
     discoveryOn: Boolean,
     autoMixOn: Boolean,
     autoMixMode: String,
@@ -97,6 +100,10 @@ fun HomeScreen(
         if (HomeSection.DISCOVERY in shown || HomeSection.MIXES in shown) {
             library.loadPlaylists()
             library.loadMixes()
+        }
+        if (HomeSection.RADIO in shown) {
+            library.loadArtists()
+            library.loadPlayed(true)
         }
         shown.forEach { section ->
             section.albumKind()?.let { library.loadAlbums(it) }
@@ -129,6 +136,15 @@ fun HomeScreen(
                     )
                 } else if (section == HomeSection.MIXES) {
                     MixesRow(mixLists, onOpenPlaylist)
+                } else if (section == HomeSection.RADIO) {
+                    val artistLoad by library.artists.collectAsStateWithLifecycle()
+                    val allArtists = (artistLoad as? Load.Ready<List<Artist>>)?.data.orEmpty()
+                    // The artists you play most; without a play history a few artists at random
+                    val topSongs = (played[true] as? Load.Ready<List<Song>>)?.data.orEmpty()
+                    val byId = allArtists.associateBy { it.id }
+                    val mine = topSongs.mapNotNull { it.artistId }.distinct().mapNotNull { byId[it] }.take(10)
+                    val radioArtists = mine.ifEmpty { remember(allArtists) { allArtists.shuffled().take(10) } }
+                    RadioRow(radioArtists, onStartRadio)
                 } else if (section == HomeSection.TOP_PLAYED || section == HomeSection.HISTORY) {
                     val byCount = section == HomeSection.TOP_PLAYED
                     SectionHeader(section.label, onClick = { onOpenPlayed(byCount) })

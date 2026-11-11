@@ -1,5 +1,6 @@
 package org.nooklin.music.ui.playback
 
+import org.nooklin.music.ui.common.NooklinTopBar
 import androidx.compose.ui.unit.sp
 import org.nooklin.music.ui.common.LocalBottomOverlay
 import androidx.compose.foundation.layout.PaddingValues
@@ -99,8 +100,8 @@ fun UpNextScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Up Next", fontSize = 34.sp, fontWeight = FontWeight.Bold) },
+            NooklinTopBar(
+                title = "Up Next",
                 actions = {
                     val ids = rows.map { it.second.id }.filter { it.isNotEmpty() }
                     val allDownloaded = ids.isNotEmpty() && ids.all { it in downloaded }
@@ -147,11 +148,7 @@ fun UpNextScreen(
                         }
                     }
                 },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
+                onBack = onBack
             )
         },
         snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = LocalBottomOverlay.current)) }

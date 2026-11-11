@@ -1,5 +1,6 @@
 package org.nooklin.music.ui.library
 
+import org.nooklin.music.ui.common.NooklinTopBar
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
@@ -47,6 +48,7 @@ import org.nooklin.music.ui.common.LocalBottomOverlay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DownloadsScreen(onBack: () -> Unit, onPlay: (List<Song>, Int, Boolean) -> Unit) {
+    val songTap = rememberSongTap(onPlay)
     val context = LocalContext.current
     val downloads = remember { DownloadManager.get(context) }
     val jobs by downloads.jobs.collectAsStateWithLifecycle()
@@ -57,14 +59,7 @@ fun DownloadsScreen(onBack: () -> Unit, onPlay: (List<Song>, Int, Boolean) -> Un
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Downloaded Songs", fontSize = 34.sp, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
+            NooklinTopBar("Downloaded Songs", onBack)
         }
     ) { padding ->
         LazyColumn(
@@ -115,7 +110,7 @@ fun DownloadsScreen(onBack: () -> Unit, onPlay: (List<Song>, Int, Boolean) -> Un
                         coverId = song.coverArt,
                         starred = null,
                         onToggleStar = {},
-                        onClick = { onPlay(songs, index, false) },
+                        onClick = { songTap(songs, index) },
                         menu = {
                             IconButton(onClick = { downloads.remove(song.id) }) {
                                 Icon(Icons.Filled.Delete, contentDescription = "Remove download")

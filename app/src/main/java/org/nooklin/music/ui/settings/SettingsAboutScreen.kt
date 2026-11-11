@@ -1,5 +1,6 @@
 package org.nooklin.music.ui.settings
 
+import org.nooklin.music.ui.common.NooklinTopBar
 import androidx.compose.ui.unit.sp
 import org.nooklin.music.ui.common.LocalBottomOverlay
 import androidx.compose.foundation.layout.height
@@ -39,14 +40,7 @@ import org.nooklin.music.BuildConfig
 fun SettingsAboutScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("About", fontSize = 34.sp, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
+            NooklinTopBar("About", onBack)
         }
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {

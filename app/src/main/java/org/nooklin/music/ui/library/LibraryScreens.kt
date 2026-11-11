@@ -14,6 +14,14 @@ import java.text.Collator
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import org.nooklin.music.ui.common.NooklinMenu
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -231,7 +239,8 @@ fun AlbumsScreen(
                                 coverId = album.coverArt,
                                 starred = album.id in starred,
                                 onToggleStar = { vm.toggleStar(StarKind.ALBUM, album.id) },
-                                onClick = { onOpenAlbum(album.id) }
+                                onClick = { onOpenAlbum(album.id) },
+                                menu = { AlbumMenu(vm, album) }
                             )
                         }
                     }
@@ -249,6 +258,7 @@ fun FavoritesScreen(
     onOpenAlbum: (String) -> Unit,
     onPlay: (List<Song>, Int, Boolean) -> Unit
 ) {
+    val songTap = rememberSongTap(onPlay)
     val load by vm.favorites.collectAsStateWithLifecycle()
     val starred by vm.starred.collectAsStateWithLifecycle()
     val notice by vm.notice.collectAsStateWithLifecycle()
@@ -295,7 +305,8 @@ fun FavoritesScreen(
                                 coverId = album.coverArt,
                                 starred = album.id in starred,
                                 onToggleStar = { vm.toggleStar(StarKind.ALBUM, album.id) },
-                                onClick = { onOpenAlbum(album.id) }
+                                onClick = { onOpenAlbum(album.id) },
+                                menu = { AlbumMenu(vm, album) }
                             )
                         }
                     }
@@ -309,7 +320,7 @@ fun FavoritesScreen(
                                 starred = song.id in starred,
                                 onToggleStar = { vm.toggleStar(StarKind.SONG, song.id) },
                                 // Plays the favorite songs from this one
-                                onClick = { onPlay(favorites.songs, index, false) },
+                                onClick = { songTap(favorites.songs, index) },
                                 menu = { SongMenu(vm, song.id, song = song) }
                             )
                         }
@@ -317,210 +328,5 @@ fun FavoritesScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-fun ArtistScreen(
-    artistId: String,
-    vm: LibraryViewModel,
-    onBack: () -> Unit,
-    onOpenAlbum: (String) -> Unit,
-    onPlay: (List<Song>, Int, Boolean) -> Unit
-) {
-    val favorites by vm.favorites.collectAsStateWithLifecycle()
-    val bio by vm.bio.collectAsStateWithLifecycle()
-    var bioOpen by remember { mutableStateOf(false) }
-    LaunchedEffect(artistId) { vm.loadBio(artistId) }
-    LaunchedEffect(Unit) { vm.openFavorites() }
-    val favSongs = (favorites as? Load.Ready<Favorites>)?.data?.songs.orEmpty().filter { it.artistId == artistId }
-    val state by vm.artistDetail.collectAsStateWithLifecycle()
-    val starred by vm.starred.collectAsStateWithLifecycle()
-    val notice by vm.notice.collectAsStateWithLifecycle()
-    LaunchedEffect(artistId) { vm.loadArtist(artistId) }
-
-    // A stale answer for another artist must not flash by while this one loads
-    val load = if (state.first == artistId) state.second else Load.Loading
-    val title = (load as? Load.Ready<ArtistDetail>)?.data?.artist?.name ?: "Artist"
-
-    LibraryScaffold(title, onBack, { vm.loadArtist(artistId, force = true) }, notice, vm::noticeShown) {
-        LoadBody(load, onRetry = { vm.loadArtist(artistId, force = true) }) { detail ->
-            if (detail.albums.isEmpty()) {
-                EmptyText("No albums for this artist.")
-            } else {
-                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = LocalBottomOverlay.current)) {
-                    item(key = "artist-head") {
-                        val text = if (bio.first == artistId) bio.second else ""
-                        Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                            if (detail.artist.coverArt != null) {
-                                CoverArt(detail.artist.coverArt, 160.dp, Modifier.align(Alignment.CenterHorizontally))
-                            }
-                            TextButton(
-                                onClick = { vm.startRadio(artistId, null) { onPlay(it, 0, false) } },
-                                modifier = Modifier.align(Alignment.CenterHorizontally)
-                            ) { Text("Radio") }
-                            if (text.isNotEmpty()) {
-                                Text(
-                                    text,
-                                    maxLines = if (bioOpen) Int.MAX_VALUE else 5,
-                                    overflow = TextOverflow.Ellipsis,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier
-                                        .padding(top = 12.dp)
-                                        .clickable { bioOpen = !bioOpen }
-                                )
-                            }
-                        }
-                    }
-                    if (favSongs.isNotEmpty()) {
-                        item(key = "fav-title") {
-                            Text(
-                                "Favorite songs",
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                            )
-                        }
-                        itemsIndexed(favSongs, key = { _, song -> "fav-" + song.id }) { index, song ->
-                            MediaRow(
-                                title = song.title,
-                                subtitle = song.album,
-                                coverId = song.coverArt,
-                                starred = song.id in starred,
-                                onToggleStar = { vm.toggleStar(StarKind.SONG, song.id) },
-                                onClick = { onPlay(favSongs, index, false) },
-                                menu = { SongMenu(vm, song.id, song = song) }
-                            )
-                        }
-                        item(key = "albums-title") {
-                            Text(
-                                "Albums",
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                            )
-                        }
-                    }
-                    items(detail.albums, key = { it.id }) { album ->
-                        MediaRow(
-                            title = album.name,
-                            subtitle = albumSubtitle("", album.year, album.songCount),
-                            coverId = album.coverArt,
-                            starred = album.id in starred,
-                            onToggleStar = { vm.toggleStar(StarKind.ALBUM, album.id) },
-                            onClick = { onOpenAlbum(album.id) }
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun AlbumScreen(
-    albumId: String,
-    vm: LibraryViewModel,
-    onBack: () -> Unit,
-    onPlay: (List<Song>, Int, Boolean) -> Unit
-) {
-    val state by vm.albumDetail.collectAsStateWithLifecycle()
-    val starred by vm.starred.collectAsStateWithLifecycle()
-    val notice by vm.notice.collectAsStateWithLifecycle()
-    val appContext = LocalContext.current
-    val downloads = remember { DownloadManager.get(appContext) }
-    val downloaded by downloads.downloaded.collectAsStateWithLifecycle()
-    val queue = LocalQueueActions.current
-    LaunchedEffect(albumId) { vm.loadAlbum(albumId) }
-    var addingAlbum by remember { mutableStateOf(false) }
-
-    val load = if (state.first == albumId) state.second else Load.Loading
-    val title = (load as? Load.Ready<AlbumDetail>)?.data?.album?.name ?: "Album"
-
-    LibraryScaffold(title, onBack, { vm.loadAlbum(albumId, force = true) }, notice, vm::noticeShown) {
-        LoadBody(load, onRetry = { vm.loadAlbum(albumId, force = true) }) { detail ->
-            LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = LocalBottomOverlay.current)) {
-                item {
-                    MediaRow(
-                        title = detail.album.name,
-                        subtitle = albumSubtitle(detail.album.artist, detail.album.year, detail.album.songCount),
-                        coverId = detail.album.coverArt,
-                        starred = detail.album.id in starred,
-                        onToggleStar = { vm.toggleStar(StarKind.ALBUM, detail.album.id) },
-                        onClick = null
-                    )
-                }
-                if (detail.songs.isNotEmpty()) {
-                    item {
-                        Row(Modifier.padding(horizontal = 16.dp)) {
-                            TextButton(onClick = { onPlay(detail.songs, 0, false) }) { Text("Play") }
-                            TextButton(onClick = { onPlay(detail.songs, 0, true) }) { Text("Shuffle") }
-                            TextButton(onClick = { addingAlbum = true }) { Text("Add to playlist") }
-                        }
-                        if (queue != null) {
-                            Row(Modifier.padding(horizontal = 16.dp)) {
-                                TextButton(onClick = {
-                                    queue.playNext(detail.songs)
-                                    vm.say("Playing next")
-                                }) { Text("Play next") }
-                                TextButton(onClick = {
-                                    queue.addToQueue(detail.songs)
-                                    vm.say("Added to queue")
-                                }) { Text("Add to queue") }
-                            }
-                            Row(Modifier.padding(horizontal = 16.dp)) {
-                                TextButton(onClick = {
-                                    queue.playNext(detail.songs.shuffled())
-                                    vm.say("Playing next, shuffled")
-                                }) { Text("Shuffle next") }
-                                TextButton(onClick = {
-                                    queue.addToQueue(detail.songs.shuffled())
-                                    vm.say("Added to queue, shuffled")
-                                }) { Text("Shuffle to queue") }
-                            }
-                        }
-                        Row(Modifier.padding(horizontal = 16.dp)) {
-                            if (detail.songs.all { it.id in downloaded }) {
-                                TextButton(onClick = {
-                                    detail.songs.forEach { downloads.remove(it.id) }
-                                    vm.say("Downloads removed")
-                                }) { Text("Remove downloads") }
-                            } else {
-                                TextButton(onClick = {
-                                    downloads.enqueue(detail.songs)
-                                    vm.say("Added to downloads")
-                                }) { Text("Download") }
-                            }
-                        }
-                    }
-                }
-                if (detail.songs.isEmpty()) {
-                    item {
-                        Text(
-                            "No songs in this album.",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(24.dp)
-                        )
-                    }
-                }
-                itemsIndexed(detail.songs, key = { _, song -> song.id }) { index, song ->
-                    val number = if (song.track > 0) "${song.track}. " else ""
-                    val format = song.suffix.uppercase()
-                    MediaRow(
-                        title = number + song.title,
-                        subtitle = listOf(formatDuration(song.durationSeconds), format).filter { it.isNotEmpty() }
-                            .joinToString(" · "),
-                        coverId = null,
-                        starred = song.id in starred,
-                        onToggleStar = { vm.toggleStar(StarKind.SONG, song.id) },
-                        onClick = { onPlay(detail.songs, index, false) },
-                        showCover = false,
-                        menu = { SongMenu(vm, song.id, song = song) }
-                    )
-                }
-            }
-        }
-    }
-    if (addingAlbum) {
-        val songs = (load as? Load.Ready<AlbumDetail>)?.data?.songs.orEmpty()
-        AddToPlaylistDialog(vm, songs.map { it.id }, onDismiss = { addingAlbum = false })
     }
 }

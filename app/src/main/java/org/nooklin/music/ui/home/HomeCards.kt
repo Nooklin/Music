@@ -26,7 +26,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.nooklin.music.data.library.Artist
 import org.nooklin.music.data.library.Playlist
+import org.nooklin.music.ui.library.CoverImage
 import org.nooklin.music.playback.taste.MixId
 import org.nooklin.music.ui.library.PlaylistCover
 import androidx.compose.foundation.layout.Row
@@ -88,6 +90,28 @@ fun MixesRow(playlists: Map<MixId, Playlist>, onOpen: (String) -> Unit) {
     ) {
         for (playlist in shown) {
             item(key = playlist.id) { PlaylistCard(playlist) { onOpen(playlist.id) } }
+        }
+    }
+}
+
+/** "Radio": round pictures of artists; a tap starts a radio around the artist (an AutoMix mix when AutoMix is on). */
+@Composable
+fun RadioRow(artists: List<Artist>, onStart: (Artist) -> Unit) {
+    if (artists.isEmpty()) return
+    Text(
+        "Radio Stations",
+        fontSize = 24.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 8.dp)
+    )
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 24.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        for (artist in artists) {
+            item(key = artist.id) {
+                Card(artist.name, "Radio", { onStart(artist) }) { CoverImage(artist.coverArt, 300, Modifier.size(150.dp), 75.dp) }
+            }
         }
     }
 }

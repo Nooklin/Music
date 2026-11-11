@@ -51,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.nooklin.music.ui.common.FitTitle
 import org.nooklin.music.ui.common.GlassPill
 import org.nooklin.music.ui.common.GlassPillContainer
 import org.nooklin.music.ui.common.LocalBottomOverlay
@@ -98,7 +99,7 @@ fun SearchableFrame(
             AnimatedVisibility(visible = !searching, enter = expandVertically(), exit = shrinkVertically()) {
                 Row(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
-                    Text(title, fontSize = 34.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), maxLines = 1)
+                    FitTitle(title, Modifier.weight(1f))
                     actions()
                     IconButton(onClick = onRefresh) { Icon(Icons.Filled.Refresh, contentDescription = "Refresh") }
                     Box {

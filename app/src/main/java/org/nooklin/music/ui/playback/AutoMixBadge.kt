@@ -1,7 +1,6 @@
 package org.nooklin.music.ui.playback
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -38,6 +37,7 @@ fun autoMixLine(state: PlayerState, autoMix: Boolean, modeId: String): AutoMixIn
 
 // A calm green for "on", the same on a light and a dark cover
 private val ON_COLOR = Color(0xFF34D399)
+private val OFF_COLOR = Color(0xFFEF4444)
 
 @Composable
 fun AutoMixBadge(
@@ -55,7 +55,7 @@ fun AutoMixBadge(
                 Modifier
                     .size(6.dp)
                     .clip(CircleShape)
-                    .then(if (info.on) Modifier.background(ON_COLOR) else Modifier.border(1.dp, softColor, CircleShape))
+                    .then(if (info.on) Modifier.background(ON_COLOR) else Modifier.background(OFF_COLOR))
             )
             Spacer(Modifier.width(7.dp))
             Text(

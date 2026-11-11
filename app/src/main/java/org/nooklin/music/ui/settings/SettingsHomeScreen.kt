@@ -1,5 +1,6 @@
 package org.nooklin.music.ui.settings
 
+import org.nooklin.music.ui.common.NooklinTopBar
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,14 +41,7 @@ fun SettingsHomeScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Home", fontSize = 34.sp, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
+            NooklinTopBar("Home", onBack)
         }
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {

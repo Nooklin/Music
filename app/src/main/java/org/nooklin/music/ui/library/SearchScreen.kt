@@ -56,6 +56,7 @@ fun SearchScreen(
     onOpenAlbum: (String) -> Unit,
     onPlay: (List<Song>, Int, Boolean) -> Unit
 ) {
+    val songTap = rememberSongTap(onPlay)
     var query by rememberSaveable { mutableStateOf("") }
     val recent by vm.recent.collectAsStateWithLifecycle()
     val searched by vm.searchState.collectAsStateWithLifecycle()
@@ -165,7 +166,8 @@ fun SearchScreen(
                                             coverId = album.coverArt,
                                             starred = album.id in starred,
                                             onToggleStar = { vm.toggleStar(StarKind.ALBUM, album.id) },
-                                            onClick = { vm.rememberSearch(shownQuery); onOpenAlbum(album.id) }
+                                            onClick = { vm.rememberSearch(shownQuery); onOpenAlbum(album.id) },
+                                            menu = { AlbumMenu(vm, album) }
                                         )
                                     }
                                 }
@@ -180,7 +182,7 @@ fun SearchScreen(
                                             starred = song.id in starred,
                                             onToggleStar = { vm.toggleStar(StarKind.SONG, song.id) },
                                             // Plays the songs of this search from the tapped one
-                                            onClick = { vm.rememberSearch(shownQuery); onPlay(results.songs, index, false) },
+                                            onClick = { vm.rememberSearch(shownQuery); songTap(results.songs, index) },
                                             menu = { SongMenu(vm, song.id, song = song) }
                                         )
                                     }

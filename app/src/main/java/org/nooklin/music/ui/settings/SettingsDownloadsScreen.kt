@@ -1,5 +1,6 @@
 package org.nooklin.music.ui.settings
 
+import org.nooklin.music.ui.common.NooklinTopBar
 import android.os.StatFs
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
@@ -72,14 +73,7 @@ fun SettingsDownloadsScreen(onBack: () -> Unit) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Downloads", fontSize = 34.sp, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
+            NooklinTopBar("Downloads", onBack)
         }
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {

@@ -49,6 +49,7 @@ enum class AppFont(val storageKey: String, val label: String) {
 enum class HomeSection(val label: String) {
     DISCOVERY("Discovery"),
     MIXES("Playlists made for you"),
+    RADIO("Radio Stations"),
     UP_NEXT("Up Next"),
     RECENT("Recently played"),
     NEWEST("Recently added"),
@@ -64,6 +65,7 @@ data class HomeSectionSetting(val section: HomeSection, val enabled: Boolean)
 private val DEFAULT_HOME_SECTIONS = listOf(
     HomeSectionSetting(HomeSection.DISCOVERY, true),
     HomeSectionSetting(HomeSection.MIXES, true),
+    HomeSectionSetting(HomeSection.RADIO, true),
     HomeSectionSetting(HomeSection.UP_NEXT, true),
     HomeSectionSetting(HomeSection.RECENT, true),
     HomeSectionSetting(HomeSection.NEWEST, true),
@@ -124,6 +126,7 @@ private val PLAYLIST_GRID_KEY = booleanPreferencesKey("playlist_grid")
 private val PLAYLIST_ASCENDING_KEY = booleanPreferencesKey("playlist_ascending")
 private val LIBRARY_SECTIONS_KEY = stringPreferencesKey("library_sections")
 private val HOME_SECTIONS_KEY = stringPreferencesKey("home_sections")
+private val TOUR_DONE_KEY = booleanPreferencesKey("tour_done")
 private val COLORFUL_KEY = booleanPreferencesKey("colorful")
 
 private val BACKUP_NAMES = setOf(
@@ -161,6 +164,13 @@ class AppPreferences(private val context: Context) {
 
     suspend fun setContrastColor(color: ContrastColor) {
         context.appSettingsDataStore.edit { prefs -> prefs[CONTRAST_COLOR_KEY] = color.storageKey }
+    }
+
+    // The tour that shows the first time the app opens
+    val tourDone: Flow<Boolean> = context.appSettingsDataStore.data.map { prefs -> prefs[TOUR_DONE_KEY] ?: false }
+
+    suspend fun setTourDone(value: Boolean) {
+        context.appSettingsDataStore.edit { prefs -> prefs[TOUR_DONE_KEY] = value }
     }
 
     // Settings icons on coloured tiles (on by default)

@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.nooklin.music.ui.common.GlassPill
 import org.nooklin.music.ui.common.GlassPillContainer
+import org.nooklin.music.ui.tour.tourTarget
 
 enum class Tab(val label: String, val icon: ImageVector) {
     HOME("Home", Icons.Rounded.Home),
@@ -80,6 +81,7 @@ fun AppBottomBar(selected: Tab, onSelect: (Tab) -> Unit, modifier: Modifier = Mo
                     Modifier
                         .weight(1f)
                         .fillMaxHeight()
+                        .tourTarget("tab_${tab.name}")
                         .clip(RoundedCornerShape(20.dp))
                         .then(
                             if (active) Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))

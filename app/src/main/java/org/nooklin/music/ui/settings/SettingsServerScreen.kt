@@ -1,5 +1,6 @@
 package org.nooklin.music.ui.settings
 
+import org.nooklin.music.ui.common.NooklinTopBar
 import androidx.compose.ui.unit.sp
 import org.nooklin.music.ui.common.LocalBottomOverlay
 import androidx.compose.foundation.layout.height
@@ -70,14 +71,7 @@ fun SettingsServerScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Server", fontSize = 34.sp, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
+            NooklinTopBar("Server", onBack)
         }
     ) { padding ->
         Column(

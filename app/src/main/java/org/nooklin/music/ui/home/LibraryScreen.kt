@@ -1,10 +1,12 @@
 package org.nooklin.music.ui.home
 
+import org.nooklin.music.ui.common.NooklinTopBar
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.graphicsLayer
@@ -66,7 +68,19 @@ import org.nooklin.music.ui.common.LocalBottomOverlay
 import org.nooklin.music.ui.common.NooklinMenu
 import org.nooklin.music.ui.common.GlassPill
 import org.nooklin.music.ui.common.GlassPillContainer
+import org.nooklin.music.ui.settings.SettingsIcon
+import org.nooklin.music.ui.settings.Tile
 import org.nooklin.music.ui.theme.LocalContrastColorState
+
+private fun tintOf(section: LibrarySection): Color = when (section) {
+    LibrarySection.ARTISTS -> Tile.Orange
+    LibrarySection.ALBUMS -> Tile.Purple
+    LibrarySection.SONGS -> Tile.Blue
+    LibrarySection.FAVORITES -> Tile.Red
+    LibrarySection.GENRES -> Tile.Green
+    LibrarySection.PLAYLISTS -> Tile.Purple
+    LibrarySection.DOWNLOADS -> Tile.Blue
+}
 
 private fun iconOf(section: LibrarySection): ImageVector = when (section) {
     LibrarySection.ARTISTS -> Icons.Filled.Person
@@ -100,8 +114,8 @@ fun LibraryScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Library", fontSize = 34.sp, fontWeight = FontWeight.Bold) },
+            NooklinTopBar(
+                title = "Library",
                 actions = {
                     if (editing) {
                         IconButton(onClick = { onSave(draft); editing = false }) {
@@ -145,7 +159,7 @@ fun LibraryScreen(
                             Modifier.fillMaxWidth().heightIn(min = 48.dp).alpha(if (setting.visible) 1f else 0.4f),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(iconOf(setting.section), contentDescription = null, modifier = Modifier.padding(start = 8.dp, end = 16.dp))
+                            Box(Modifier.padding(start = 8.dp)) { SettingsIcon(iconOf(setting.section), tintOf(setting.section)) }
                             Text(setting.section.label, modifier = Modifier.weight(1f))
                             IconButton(onClick = {
                                 // At least one row stays visible, or the screen would be empty
@@ -196,7 +210,7 @@ fun LibraryScreen(
         } else {
             Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
                 sections?.filter { it.visible }?.forEach { setting ->
-                    LibraryRow(setting.section.label, iconOf(setting.section)) { onNavigate(setting.section.key) }
+                    LibraryRow(setting.section.label, iconOf(setting.section), tintOf(setting.section)) { onNavigate(setting.section.key) }
                 }
                 Spacer(Modifier.height(LocalBottomOverlay.current))
             }
@@ -205,7 +219,7 @@ fun LibraryScreen(
 }
 
 @Composable
-private fun LibraryRow(label: String, icon: ImageVector, onClick: () -> Unit) {
+private fun LibraryRow(label: String, icon: ImageVector, tint: Color, onClick: () -> Unit) {
     GlassPillContainer(backgroundColor = GlassPill.adaptiveGlassBackground) {
         Row(
             modifier = Modifier
@@ -218,7 +232,7 @@ private fun LibraryRow(label: String, icon: ImageVector, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, contentDescription = null, modifier = Modifier.padding(end = 16.dp))
+                SettingsIcon(icon, tint)
                 Text(label)
             }
             Icon(Icons.Filled.ChevronRight, contentDescription = null)

@@ -222,6 +222,38 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         startQueue(songs, startIndex, shuffle)
     }
 
+    /**
+     * A tap on a song. With AutoMix on (and a mode chosen) the song starts and a new mix is made around it; otherwise the
+     * list plays from that song.
+     */
+    fun playSongFrom(songs: List<Song>, index: Int) {
+        val song = songs.getOrNull(index) ?: return
+        val mode = if (settings.value.autoMix) MixMode.of(settings.value.autoMixMode) else null
+        if (mode == null) {
+            playSongs(songs, index, false)
+        } else {
+            viewModelScope.launch { settingsStore.setDiscovery(false) }
+            chooseAutoMixMode(mode, startWith = song)
+        }
+    }
+
+    /**
+     * The Radio block on Home with AutoMix on: an AutoMix mix of the downloaded songs of one artist, started with one of them.
+     * With fewer than [MIN_ARTIST_MIX] downloaded songs of the artist a normal AutoMix of all downloaded songs is made instead.
+     */
+    fun startArtistMix(artistId: String) {
+        val app = getApplication<Application>()
+        val mode = MixMode.of(settings.value.autoMixMode) ?: MixMode.MIXED
+        val mine = DownloadManager.get(app).downloaded.value.values.map { it.song }.filter { it.artistId == artistId }
+        if (mine.size < MIN_ARTIST_MIX) {
+            Toast.makeText(app, "AutoMix is on and too few songs of this artist are downloaded, so no radio AutoMix is made. A normal AutoMix of your downloaded songs starts instead.", Toast.LENGTH_LONG).show()
+            chooseAutoMixMode(mode, announce = true)
+        } else {
+            viewModelScope.launch { settingsStore.setDiscovery(false) }
+            chooseAutoMixMode(mode, startWith = mine.random(), onlyArtistId = artistId)
+        }
+    }
+
     private fun startQueue(songs: List<Song>, startIndex: Int, shuffle: Boolean) {
         val items = songs.map { song ->
             QueueEntry(
@@ -481,17 +513,20 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         mode: MixMode,
         zone: Int = settings.value.autoMixZone,
         genres: Set<String> = settings.value.autoMixGenres,
-        announce: Boolean = false
+        announce: Boolean = false,
+        startWith: Song? = null,
+        onlyArtistId: String? = null
     ) {
         val app = getApplication<Application>()
         val c = controller
-        val seed = c?.currentMediaItem?.mediaId
+        // With startWith the song that was tapped is the start of a new queue: it is the seed and nothing else is kept
+        val seed = startWith?.id ?: c?.currentMediaItem?.mediaId
         // Songs the user put in the queue by hand (pinned) stay where they are; the new list is added after them
         val firstUpcoming = if (c == null || c.currentMediaItem == null) 0 else c.currentMediaItemIndex + 1
-        val pinnedIds = if (c == null) emptySet() else (firstUpcoming until c.mediaItemCount).filter { c.getMediaItemAt(it).mediaMetadata.extras?.getBoolean(EXTRA_PINNED) == true }.map { c.getMediaItemAt(it).mediaId }.toSet()
+        val pinnedIds = if (c == null || startWith != null) emptySet() else (firstUpcoming until c.mediaItemCount).filter { c.getMediaItemAt(it).mediaMetadata.extras?.getBoolean(EXTRA_PINNED) == true }.map { c.getMediaItemAt(it).mediaId }.toSet()
         // 0.0.137: only the last RECENT_PLAYED songs that played (and the one playing) are left out, not everything that ever sat before it in
         // the queue; in a long queue that was nearly the whole library, so a mode could choose from a few leftovers (log 0.0.135: 24 of 226)
-        val exclude = (if (c == null || c.currentMediaItem == null) emptySet() else (maxOf(0, c.currentMediaItemIndex - RECENT_PLAYED + 1)..c.currentMediaItemIndex).map { c.getMediaItemAt(it).mediaId }.toSet()) + pinnedIds
+        val exclude = if (startWith != null) setOf(startWith.id) else (if (c == null || c.currentMediaItem == null) emptySet() else (maxOf(0, c.currentMediaItemIndex - RECENT_PLAYED + 1)..c.currentMediaItemIndex).map { c.getMediaItemAt(it).mediaId }.toSet()) + pinnedIds
         viewModelScope.launch {
             // 0.0.139: the screen shows that a list is being made, and the log shows where the seconds go
             val t0 = android.os.SystemClock.elapsedRealtime()
@@ -499,7 +534,7 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
             try {
             settingsStore.setAutoMixMode(mode.id, zone, genres)
             settingsStore.setAutoMix(true)
-            val songs = DownloadManager.get(app).downloaded.value.values.map { it.song }
+            val songs = DownloadManager.get(app).downloaded.value.values.map { it.song }.filter { onlyArtistId == null || it.artistId == onlyArtistId }
             val list = withContext(Dispatchers.Default) {
                 // 0.0.143: log 0.0.142 showed 16 s for the first list and 0.2 s for the next ones; these two numbers show which step it is
                 val tPrep0 = android.os.SystemClock.elapsedRealtime()
@@ -512,10 +547,14 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
             prefetchCovers(app, list.map { it.coverArt })
             if (list.isEmpty()) {
                 Toast.makeText(app, "No downloaded, scanned songs fit ${mode.label}. Scan the library in Settings > AutoMix.", Toast.LENGTH_LONG).show()
+                // The song that was tapped still plays
+                if (startWith != null) startQueue(listOf(startWith), 0, false)
                 return@launch
             }
             val cc = controller
-            if (cc == null || cc.mediaItemCount == 0 || cc.currentMediaItem == null) {
+            if (startWith != null) {
+                startQueue(listOf(startWith) + list, 0, false)
+            } else if (cc == null || cc.mediaItemCount == 0 || cc.currentMediaItem == null) {
                 startQueue(list, 0, false)
             } else {
                 cc.shuffleModeEnabled = false
@@ -617,6 +656,7 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         const val MAX_UPCOMING = 300
         const val RECENT_PLAYED = 20  // 0.0.137: this many played songs are left out when a mode of the AutoMix menu is chosen
         const val PREFETCH_COVERS = 12  // 0.0.139: covers loaded ahead for a new mode list
+        const val MIN_ARTIST_MIX = 5  // fewer downloaded songs of an artist than this: no artist AutoMix from Home
     }
 
     override fun onCleared() {
