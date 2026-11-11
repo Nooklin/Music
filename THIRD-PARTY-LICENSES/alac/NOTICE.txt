@@ -1,0 +1,3 @@
+Apple Lossless Audio Codec (ALAC) decoder, Copyright (c) 2011 Apple Inc.
+https://github.com/macosforge/alac
+Used unchanged in app/src/main/cpp/third_party/alac. Licensed under the Apache License, Version 2.0 (text in LICENSE-alac.txt).

@@ -1,0 +1,28 @@
+# Gradle and build output
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Local configuration and secrets, never commit these
+local.properties
+keystore.properties
+*.keystore
+*.jks
+
+# IDE
+.idea/
+*.iml
+.kotlin/
+.cxx/
+.externalNativeBuild/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Captures and reports
+captures/
+*.hprof
+
+# Personal working notes
+ERRORS.md

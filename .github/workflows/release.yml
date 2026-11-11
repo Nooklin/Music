@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check that the tag matches versionName
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          APP_VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          echo "Tag version: $TAG_VERSION"
+          echo "versionName: $APP_VERSION"
+          if [ "$TAG_VERSION" != "$APP_VERSION" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match versionName $APP_VERSION in app/build.gradle.kts"
+            exit 1
+          fi
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Accept Android SDK licenses and install CMake
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "cmake;3.22.1"
+
+      - name: Create signing configuration
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > release.keystore
+          printf 'storeFile=release.keystore\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "$KEYSTORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > keystore.properties
+
+      - name: Build signed release APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Check that the APK is signed
+        run: |
+          test -f app/build/outputs/apk/release/app-release.apk
+          cp app/build/outputs/apk/release/app-release.apk "Nooklin-Music-${GITHUB_REF_NAME}.apk"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "Nooklin-Music-${GITHUB_REF_NAME}.apk" \
+            --title "Nooklin Music ${GITHUB_REF_NAME}" \
+            --generate-notes

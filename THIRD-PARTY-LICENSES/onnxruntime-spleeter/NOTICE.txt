@@ -1,0 +1,11 @@
+ONNX Runtime (com.microsoft.onnxruntime:onnxruntime-android)
+  MIT License, Copyright (c) Microsoft Corporation.
+  https://github.com/microsoft/onnxruntime/blob/main/LICENSE
+
+Spleeter (source separation weights used for the stems of AutoMix)
+  MIT License, Copyright (c) 2019-present Deezer SA.
+  https://github.com/deezer/spleeter/blob/master/LICENSE
+
+Spleeter 4 stems converted to ONNX (huggingface.co/Best-Practice/spleeter-4stems-onnx)
+  Apache License 2.0.
+  https://www.apache.org/licenses/LICENSE-2.0

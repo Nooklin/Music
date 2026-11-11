@@ -1,0 +1,2 @@
+Signalsmith Stretch and Signalsmith Linear, Copyright (c) 2022 Geraint Luff / Signalsmith Audio Ltd.
+MIT License (texts in this folder).
