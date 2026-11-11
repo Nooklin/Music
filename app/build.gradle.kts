@@ -22,8 +22,8 @@ android {
         applicationId = "org.nooklin.music"
         minSdk = 33
         targetSdk = 36
-        versionCode = 193
-        versionName = "1.0.1"
+        versionCode = 194
+        versionName = "1.0.2"
         externalNativeBuild {
             cmake {
                 // Oboe is built against the shared C++ runtime

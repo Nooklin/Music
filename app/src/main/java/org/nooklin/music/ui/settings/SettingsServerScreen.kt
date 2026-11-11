@@ -49,6 +49,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
+import org.nooklin.music.ui.tour.TourTargets
 import org.nooklin.music.data.server.PingResult
 import org.nooklin.music.ui.common.GlassPill
 
@@ -167,6 +169,9 @@ fun SettingsServerScreen(
 
             PillButton(if (state.testing) "Testing..." else "Test connection", enabled = !state.testing, onClick = onTest)
             PillButton("Save", enabled = !state.testing, onClick = onSave)
+            // While the tour card sits over this screen, the end of the form can scroll clear of it
+            val covered = with(LocalDensity.current) { TourTargets.coveredBottomPx.toDp() }
+            if (covered > 0.dp) Spacer(Modifier.height(covered + 48.dp))
 
             state.error?.let {
                 Text(

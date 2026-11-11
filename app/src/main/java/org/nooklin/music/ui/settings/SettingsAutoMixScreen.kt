@@ -58,6 +58,7 @@ fun SettingsAutoMixScreen(onBack: () -> Unit) {
     val running by MixLibraryScan.running.collectAsStateWithLifecycle()
     var showNotice by remember { mutableStateOf(false) }
     var confirmWipe by remember { mutableStateOf(false) }
+    var confirmScan by remember { mutableStateOf(false) }
     val (scanned, total) = progress
 
     Scaffold(
@@ -134,7 +135,7 @@ fun SettingsAutoMixScreen(onBack: () -> Unit) {
                             )
                         }
                         Button(
-                            onClick = { if (running) MixLibraryScan.stop() else MixLibraryScan.start(context) },
+                            onClick = { if (running) MixLibraryScan.stop() else confirmScan = true },
                             enabled = NativeMix.available && (running || scanned < total),
                             modifier = Modifier.padding(top = 12.dp)
                         ) {
@@ -156,6 +157,16 @@ fun SettingsAutoMixScreen(onBack: () -> Unit) {
             )
             Spacer(Modifier.height(LocalBottomOverlay.current))
         }
+    }
+
+    if (confirmScan) {
+        AlertDialog(
+            onDismissRequest = { confirmScan = false },
+            title = { Text("Scan library?") },
+            text = { Text("Scanning takes a long time, especially with many songs. Connecting the phone to a charger is recommended.") },
+            confirmButton = { TextButton(onClick = { confirmScan = false; MixLibraryScan.start(context) }) { Text("Scan") } },
+            dismissButton = { TextButton(onClick = { confirmScan = false }) { Text("Cancel") } }
+        )
     }
 
     if (confirmWipe) {

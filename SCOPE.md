@@ -1372,7 +1372,6 @@ Fix: 0.0.149 did not compile (`autoMixLine` was not imported in NooklinMusicApp.
 - AutoMix badge (mini player and Now playing) now has two lines: "AutoMix, Mode: Mixed" and "Next: Artist - Title" (second line in the softer colour; centred on the big-cover layout).
 - Now playing queue panel: the header "Up Next" with Clear now sits under the four buttons (Shuffle, Repeat, AutoPlay, AutoMix); was above them. Text changed from "Up next" to "Up Next".
 - Read this as: the request "Up Next en Clear onder de knoppen Bar" meant the queue panel in Now playing. If the Up Next screen opened from Home was meant, say so.
-- Not compiled or run on Android here.
 
 ## 0.0.152
 
@@ -1380,7 +1379,6 @@ Fix: 0.0.149 did not compile (`autoMixLine` was not imported in NooklinMusicApp.
 - Now playing (big cover layout): the AutoMix badge is centred (the lines themselves were centred in a text box that sat at the left; the column is now centred). The compact layout (small cover on the left) stays left aligned on purpose.
 - Home: the AutoMix card and the Discovery Station tile have their own colours (indigo to teal, orange to pink gradient) with white icon and text; before they used the app accent, which is white when no accent is chosen.
 - Fixed colours do not follow a chosen accent; say so if they should.
-- Not compiled or run on Android here.
 
 ## 0.0.153
 
@@ -1400,7 +1398,6 @@ Only logging, to find why a Denon (AirPlay 2) shows no sound although pairing, S
 
 - Now playing: the AutoMix line says whether AutoMix is on or off. On: a filled green dot and "AutoMix On  ·  Mode: Mixed" in the normal text colour, with "Next: Artist - Title" under it (soft colour). Off: an empty ring and "AutoMix Off" in the soft colour, nothing under it. It shows whenever something is loaded. Centred on the big-cover layout, left in the compact layout (as before). The mini player still shows nothing of it.
 - The green is a fixed colour (does not follow the app accent).
-- Not compiled or run on Android here.
 
 ## 0.0.156
 
@@ -1447,7 +1444,6 @@ Test build for the Denon AVR-X2400H without sound (0.0.157 sync fix and 0.0.158 
 
 - AirPlay menu: as wide as the cover on the Now playing screen. The cover is the width of the screen minus 24 dp on each side (when the height allows, which it does on the phone in portrait), so the menu now is 24 dp from the screen edge on both sides (was 12 dp in 0.0.160). On a screen so low that the cover is limited by its height (landscape) the menu stays wider than the cover.
 - Denon AVR-X2400H: sound confirmed by the user with 0.0.159 (log of 2026-11-11 09:19: 2 s latency, RECORD after the audio SETUP; the SSRC and sync fixes of 0.0.157 and 0.0.158 are in too). Which of the two changes of 0.0.159 is the real fix is not known yet.
-- Not compiled or run on Android here.
 
 ## 0.0.162
 
@@ -1456,7 +1452,6 @@ Test build to find the real fix for the Denon AVR-X2400H: the latency is back to
 - If the Denon plays: the RECORD order was the fix and the 2 s buffer is not needed (so no extra delay for other receivers).
 - If the Denon is silent again: the 2 s buffer is needed; then it is put back (0.0.159) and the delay either stays for every receiver or only for receivers that report themselves as Denon.
 - The log line SYNC shows `latency=11025`.
-- Not compiled or run on Android here.
 
 ## 0.0.163
 
@@ -1467,7 +1462,6 @@ Final state for the Denon AVR-X2400H, following the AirPlay standard for every r
 - Effect: sound starts about 2 s after pressing play on every AirPlay receiver (the AirPlay menu already says so).
 - Not tested whether the RECORD order or the SSRC or the sync fix are needed on top of the 2 s; they follow the spec, so they stay.
 - Logging stays (STATS, FEEDBACK, SYNC, ssrc on the ready line).
-- Not compiled or run on Android here.
 
 ## 1.0.0
 
@@ -1488,7 +1482,6 @@ First public release. Logging cleanup, no functional changes.
 - Songs have no screen of their own. A tap on a song starts it. With AutoMix on (and a mode chosen) a new mix is made around that song: the song plays first, then the mode list that suits it. Without AutoMix the list plays from that song, as before. Play and Shuffle buttons are unchanged.
 - Album screen as in the design reference: big cover, title, artist, genre, year and format, a row with Shuffle, Play and the favourite heart, the songs with their number and a "..." each, and "N Songs, X min" under them. The background takes its colour from the cover. Back and the album "..." menu float at the top. This replaces the button rows of 1.0.1.
 - Albums have a "..." menu behind the heart in every album list (Albums, Recently added/played, Favourites, Artist, Genre, Search): Play, Play next, Add to queue, Add to playlist, Download, Share, Favourite and Go to artist.
-- Not compiled or run on Android here.
 - AutoMix badge: the dot is red when AutoMix is off (it was an empty ring), green when it is on.
 - Tour as in Nooklin Calendar 0.0.32: the steps that point at a button make it pulse, the rest of the screen is dimmed and blocked, and the tour moves on by itself when the person taps the button and the screen opens (Settings, Server, Library, the player). Steps with explanations have bullet points and Next; Skip ends the tour at any time, also from the Back gesture. The player steps are left out when nothing is playing.
 - Tour and the server: without a saved server the tour makes the person add one first (Settings, Server, Save) and does not go on before it is saved. Those steps have no Skip and the Back gesture does nothing there. With a server already saved they are left out.
@@ -1496,3 +1489,9 @@ First public release. Logging cleanup, no functional changes.
 - Home block "Radio Stations": round pictures of the artists you play most (random artists when there is no play history). A tap plays only songs of that artist. AutoMix on: an AutoMix mix of the downloaded songs of that artist, started with one of them (the artist spacing rule of the ordering gives way when only one artist is left). With fewer than 5 downloaded songs of the artist a notice says so and a normal AutoMix of the downloaded songs starts instead. AutoMix off: the songs of the artist from the server, shuffled; downloaded is not needed. It can be hidden or moved in Settings > Home.
 - Library screen: the rows follow Colorful display (coloured icon tile per row, also in Edit Sections), like the settings rows.
 - Docs: README (features, dev build), the tour text (Radio Stations) and the status line of this file brought up to 1.0.1.
+
+## 1.0.2
+
+- Settings > AutoMix > Scan library: tapping the button asks first ("Scan library?"): scanning takes a long time, especially with many songs, and connecting the phone to a charger is recommended. Scan starts it, Cancel does nothing. Stop does not ask.
+- Tour, step "Connect": the screen did not react because the tour blocked and dimmed everything while the person had to fill in the server form. This step is now interactive: nothing is dimmed or blocked, and the card is small and sits at the bottom, and the server screen leaves room at the end of the form (the height of the card) so it can be scrolled up to Save above the card. The step moves on by itself when the server is saved.
+- Not compiled or run on Android here.

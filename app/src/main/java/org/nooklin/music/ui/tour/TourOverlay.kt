@@ -44,6 +44,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,6 +64,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -110,7 +112,9 @@ private class TourStep(
     // Only when there is no server yet: the steps that make the person add one
     val needsNoServer: Boolean = false,
     // No Skip and no Back gesture: the tour does not go on without it
-    val mandatory: Boolean = false
+    val mandatory: Boolean = false,
+    // The person works in the screen itself (a form): nothing is dimmed or blocked and the card is small, at the top
+    val interactive: Boolean = false
 )
 
 private const val TAP_HINT = "Tap the pulsing button to continue."
@@ -142,13 +146,9 @@ private val STEPS = listOf(
     ),
     TourStep(
         Icons.Filled.Dns, "Connect",
-        points = listOf(
-            "The address, username and password of your Navidrome server",
-            "Test the connection, then tap Save",
-            "Your password stays encrypted on this phone"
-        ),
+        "Fill in the address, username and password of your Navidrome server. Test the connection, then tap Save. Your password stays encrypted on this phone.",
         advanceWhen = { it.serverSaved }, hint = "Tap Save to continue.", place = Place.BOTTOM,
-        needsNoServer = true, mandatory = true
+        needsNoServer = true, mandatory = true, interactive = true
     ),
     TourStep(
         Icons.Filled.Dns, "Server saved",
@@ -247,6 +247,7 @@ fun TourOverlay(context: TourContext, playerAvailable: Boolean, actions: TourAct
     var origin by remember { mutableStateOf(Offset.Zero) }
     var size by remember { mutableStateOf(Offset.Zero) }
     val density = LocalDensity.current
+    DisposableEffect(Unit) { onDispose { TourTargets.coveredBottomPx = 0 } }
 
     // The place of the pulsing button, in the coordinates of this layer
     val hole: Rect? = step.target?.let { TourTargets.bounds[it] }
@@ -263,7 +264,7 @@ fun TourOverlay(context: TourContext, playerAvailable: Boolean, actions: TourAct
     ) {
         // The dark layer with a hole at the button, and a ring that grows out of the hole
         Canvas(Modifier.fillMaxSize().graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)) {
-            drawRect(Color.Black.copy(alpha = step.scrim))
+            if (!step.interactive) drawRect(Color.Black.copy(alpha = step.scrim))
             if (hole != null) {
                 val progress = pulse
                 val corner = CornerRadius(minOf(hole.width, hole.height) / 2f)
@@ -279,7 +280,9 @@ fun TourOverlay(context: TourContext, playerAvailable: Boolean, actions: TourAct
             }
         }
         // Everything is blocked, except the hole: the person taps the real button there
-        if (hole == null) {
+        if (step.interactive) {
+            // The form under the card has to work
+        } else if (hole == null) {
             Blocker(0f, 0f, size.x, size.y)
         } else {
             Blocker(0f, 0f, size.x, hole.top)
@@ -304,6 +307,7 @@ fun TourOverlay(context: TourContext, playerAvailable: Boolean, actions: TourAct
                 .then(edge)
                 .padding(horizontal = 24.dp)
                 .fillMaxWidth()
+                .onSizeChanged { TourTargets.coveredBottomPx = if (step.interactive) it.height else 0 }
                 .clip(RoundedCornerShape(28.dp))
                 .background(GlassPill.adaptivePopupBackground)
                 .border(GlassPill.adaptiveBorder, RoundedCornerShape(28.dp))
